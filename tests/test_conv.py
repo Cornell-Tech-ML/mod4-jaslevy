@@ -9,6 +9,7 @@ from .tensor_strategies import tensors
 # pyright: ignore[reportCallIssue]
 # pyright: ignore[reportArgumentType]
 
+
 @pytest.mark.task4_1
 def test_conv1d_simple() -> None:
     t = minitorch.tensor([0, 1, 2, 3]).view(1, 1, 4)
