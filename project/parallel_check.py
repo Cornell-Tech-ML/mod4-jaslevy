@@ -1,5 +1,8 @@
 from numba import njit
 
+import sys
+sys.path.append('/Users/jlevy/Desktop/MLE/mod3-jaslevy')
+
 import minitorch
 import minitorch.fast_ops
 

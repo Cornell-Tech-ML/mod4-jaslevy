@@ -35,7 +35,9 @@ class Conv1d(minitorch.Module):
 
     def forward(self, input):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        conv_out = minitorch.fast_conv.conv1d(input, self.weights.value)
+        return conv_out + self.bias.value
+
 
 
 class CNNSentimentKim(minitorch.Module):
@@ -62,14 +64,45 @@ class CNNSentimentKim(minitorch.Module):
         super().__init__()
         self.feature_map_size = feature_map_size
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        self.dropout = dropout
+
+        self.conv3 = Conv1d(embedding_size, feature_map_size, 3)
+        self.conv4 = Conv1d(embedding_size, feature_map_size, 4)
+        self.conv5 = Conv1d(embedding_size, feature_map_size, 5)
+
+        self.linear = Linear(feature_map_size, 1)
+
 
     def forward(self, embeddings):
         """
         embeddings tensor: [batch x sentence length x embedding dim]
         """
-        # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        batch, seq_len, embedding_dim = embeddings.shape
+
+        x = embeddings.permute(0, 2, 1)
+
+        conv3_out = self.conv3(x).relu()
+        conv4_out = self.conv4(x).relu()
+        conv5_out = self.conv5(x).relu()
+
+        pooled3 = minitorch.max(conv3_out, 2)
+        pooled4 = minitorch.max(conv4_out, 2)
+        pooled5 = minitorch.max(conv5_out, 2)
+
+        poolSum = pooled3 + pooled4 + pooled5
+
+        poolSum = poolSum.view(batch, self.feature_map_size)
+
+        if self.training and self.dropout > 0:
+            mask = minitorch.rand(poolSum.shape, backend=BACKEND) > self.dropout
+            poolSum = poolSum * mask * (1.0 / (1.0 - self.dropout))
+
+        output = self.linear(poolSum).sigmoid()
+
+        output = output.view(batch)
+
+        return output
+
 
 
 # Evaluation helper methods
@@ -104,15 +137,27 @@ def default_log_fn(
     train_accuracy,
     validation_predictions,
     validation_accuracy,
+    log_file=None,  # Add an optional file parameter
 ):
     global best_val
     best_val = (
         best_val if best_val > validation_accuracy[-1] else validation_accuracy[-1]
     )
-    print(f"Epoch {epoch}, loss {train_loss}, train accuracy: {train_accuracy[-1]:.2%}")
-    if len(validation_predictions) > 0:
-        print(f"Validation accuracy: {validation_accuracy[-1]:.2%}")
-        print(f"Best Valid accuracy: {best_val:.2%}")
+    log_message = (
+        f"Epoch {epoch}, loss {train_loss}, "
+        f"train accuracy: {train_accuracy[-1]:.2%}, "
+        f"validation accuracy: {validation_accuracy[-1]:.2%} "
+        f"best validation accuracy: {best_val:.2%}\n"
+    )
+
+    # Print to console
+    print(log_message.strip())
+
+    # Write to log file if provided
+    if log_file:
+        log_file.write(log_message)
+        log_file.flush()  # Ensure content is written to file
+
 
 
 class SentenceSentimentTrain:
@@ -251,25 +296,31 @@ def encode_sentiment_data(dataset, pretrained_embeddings, N_train, N_val=0):
 
     return (X_train, y_train), (X_val, y_val)
 
-
 if __name__ == "__main__":
     train_size = 450
     validation_size = 100
     learning_rate = 0.01
     max_epochs = 250
 
+    # Load the dataset
     (X_train, y_train), (X_val, y_val) = encode_sentiment_data(
         load_dataset("glue", "sst2"),
         embeddings.GloveEmbedding("wikipedia_gigaword", d_emb=50, show_progress=True),
         train_size,
         validation_size,
     )
+
+    # Initialize the model trainer
     model_trainer = SentenceSentimentTrain(
         CNNSentimentKim(feature_map_size=100, filter_sizes=[3, 4, 5], dropout=0.25)
     )
-    model_trainer.train(
-        (X_train, y_train),
-        learning_rate,
-        max_epochs=max_epochs,
-        data_val=(X_val, y_val),
-    )
+
+    # Open the log file and train the model
+    with open("sentiment_35_0.01.txt", "w") as log_file:
+        model_trainer.train(
+            (X_train, y_train),
+            learning_rate,
+            max_epochs=max_epochs,
+            data_val=(X_val, y_val),
+            log_fn=lambda *args, **kwargs: default_log_fn(*args, **kwargs, log_file=log_file),
+        )

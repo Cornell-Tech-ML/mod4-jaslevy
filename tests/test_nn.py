@@ -31,8 +31,43 @@ def test_avg(t: Tensor) -> None:
 @pytest.mark.task4_4
 @given(tensors(shape=(2, 3, 4)))
 def test_max(t: Tensor) -> None:
-    # TODO: Implement for Task 4.4.
-    raise NotImplementedError("Need to implement for Task 4.4")
+    # Property 1: Output shape should be correct for any input tensor
+    out = minitorch.max(t, 2)
+    assert out.shape == (2, 3, 1), "Output shape should be (2, 3, 1)"
+
+    # Property 2: Max value should be greater than or equal to all values in reduced dimension
+    for b in range(2):
+        for c in range(3):
+            max_val = out[b, c, 0]
+            for k in range(4):
+                assert (
+                    t[b, c, k] <= max_val
+                ), f"Max value {max_val} should be >= {t[b, c, k]}"
+
+    # Property 3: Test gradient computation
+    t.requires_grad_(True)
+    out = minitorch.max(t, 2)
+    grad_output = minitorch.tensor([[[1.0], [1.0], [1.0]], [[1.0], [1.0], [1.0]]])
+    out.backward(grad_output)
+
+    assert t.grad is not None, "Gradient should not be None"
+
+    # Property 4: For each position, gradients should sum to 1.0 and be distributed correctly
+    for b in range(2):
+        for c in range(3):
+            max_val = out[b, c, 0]
+            grad_sum = 0.0
+
+            # Sum up all gradients
+            for k in range(4):
+                grad_sum += t.grad[b, c, k]
+
+                # Check that non-maximum values have zero gradient
+                if t[b, c, k] < max_val - 1e-2:  # Using same tolerance as is_close
+                    assert_close(t.grad[b, c, k], 0.0)
+
+            # Total gradient should be 1.0
+            assert_close(grad_sum, 1.0)
 
 
 @pytest.mark.task4_4

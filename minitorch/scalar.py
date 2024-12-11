@@ -112,21 +112,48 @@ class Scalar:
         return self.history is not None and self.history.last_fn is None
 
     def is_constant(self) -> bool:
+        """True if this variable was created as a constant and not as a result of
+        an operation.
+
+        """
         return self.history is None
 
     @property
     def parents(self) -> Iterable[Variable]:
-        """Get the variables used to create this one."""
+        """A list of all variables that directly depend on this variable in the computation graph.
+
+        This list is used to compute the derivative of the output with respect to the input of the computation graph.
+
+        """
         assert self.history is not None
         return self.history.inputs
 
-    def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+    def chain_rule(self, d_output: Any) -> Iterable[Tuple["Scalar", Any]]:
+        """Compute the derivative of the output with respect to the input of the
+        computation graph using the chain rule.
+
+        Args:
+        ----
+            d_output (number, opt): derivative of the output with respect to the
+                output of the computation graph
+
+        Returns:
+        -------
+            A generator of tuples. The first element of the tuple is the input
+            variable and the second element is the derivative of the output with
+            respect to the input variable computed using the chain rule.
+
+        """
         h = self.history
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        raise NotImplementedError("Need to include this file from past assignment.")
+        d_inputs = h.last_fn._backward(h.ctx, d_output)
+        for i, (x, dx) in enumerate(zip(h.inputs, d_inputs)):
+            if not isinstance(x, Scalar) or x.is_constant():
+                continue
+            yield x, dx
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """Calls autodiff to fill in the derivatives for the history of this object.
@@ -141,17 +168,83 @@ class Scalar:
             d_output = 1.0
         backpropagate(self, d_output)
 
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # TODO: Implement for Task 1.2.
+    def __lt__(self, b: ScalarLike) -> Scalar:
+        return LT.apply(self, b)
+
+    def __gt__(self, b: ScalarLike) -> Scalar:
+        return LT.apply(b, self)
+
+    def __sub__(self, b: ScalarLike) -> Scalar:
+        return Add.apply(self, -b)
+
+    def __neg__(self) -> Scalar:
+        return Neg.apply(self)
+
+    def __add__(self, b: ScalarLike) -> Scalar:
+        return Add.apply(self, b)
+
+    def log(self) -> Scalar:
+        """Natural logarithm of a scalar value.
+
+        $f(x) = log(x)$
+
+        Returns
+        -------
+            A scalar value with the natural logarithm of the input scalar.
+
+        """
+        return Log.apply(self)
+
+    def exp(self) -> Scalar:
+        """Exponential of a scalar value.
+
+        $f(x) = e^x$
+
+        Returns
+        -------
+            A scalar value with the exponential of the input scalar.
+
+        """
+        return Exp.apply(self)
+
+    def sigmoid(self) -> Scalar:
+        r"""Sigmoid of a scalar value.
+
+        $f(x) = \frac{1}{1 + e^{-x}}$
+
+        Returns
+        -------
+            A scalar value with the sigmoid of the input scalar.
+
+        """
+        return Sigmoid.apply(self)
+
+    def relu(self) -> Scalar:
+        """ReLU of a scalar value.
+
+        $f(x) = max(0, x)$
+
+        Returns
+        -------
+            A scalar value with the ReLU of the input scalar.
+
+        """
+        return ReLU.apply(self)
+
+    def __eq__(self, b: ScalarLike) -> Scalar:
+        """Checks if two values are equal"""
+        return EQ.apply(self, b)
 
 
 def derivative_check(f: Any, *scalars: Scalar) -> None:
     """Checks that autodiff works on a python function.
     Asserts False if derivative is incorrect.
 
-    Parameters
-    ----------
-        f : function from n-scalars to 1-scalar.
-        *scalars  : n input scalar values.
+    Arguments:
+    ---------
+    f : function from n-scalars to 1-scalar.
+    *scalars  : n input scalar values.
 
     """
     out = f(*scalars)
