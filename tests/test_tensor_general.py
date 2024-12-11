@@ -13,6 +13,9 @@ from minitorch import MathTestVariable, Tensor, TensorBackend, grad_check
 from .strategies import assert_close, small_floats
 from .tensor_strategies import assert_close_tensor, shaped_tensors, tensors
 
+# pyright: ignore[reportCallIssue]
+# pyright: ignore[reportArgumentType]
+
 one_arg, two_arg, red_arg = MathTestVariable._comp_testing()
 
 

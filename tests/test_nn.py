@@ -7,6 +7,9 @@ from minitorch import Tensor
 from .strategies import assert_close
 from .tensor_strategies import tensors
 
+# pyright: ignore[reportCallIssue]
+# pyright: ignore[reportArgumentType]
+
 
 @pytest.mark.task4_3
 @given(tensors(shape=(1, 1, 4, 4)))
