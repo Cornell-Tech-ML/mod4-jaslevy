@@ -67,14 +67,11 @@ def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
         Pooled tensor
 
     """
-    batch, channel, height, width = input.shape
+    batch, channel, _, _ = input.shape
     kh, kw = kernel
-
     tiled, new_height, new_width = tile(input, kernel)
-
     pooled = tiled.sum(4) / (kh * kw)
     pooled = pooled.view(batch, channel, new_height, new_width)
-
     return pooled
 
 
@@ -98,16 +95,11 @@ class Max(Function):
         shape = list(input.shape)
         shape[dim] = 1
         expanded_output = output.view(*shape)
-
         mask = input == expanded_output
-
         counts = mask.sum(dim)
-
         expanded_counts = counts.view(*shape)
-
         # Distribute gradient evenly
         grad_input = mask / expanded_counts * grad_output
-
         return grad_input, tensor([0.0])
 
 
@@ -154,6 +146,8 @@ def maxpool2d(input: Tensor, kernel_size: Tuple[int, int]) -> Tensor:
 
     out = input.zeros((batch_size, nchannels, out_height, out_width))
 
+    # Iterate over each output pixel and find the maximum value
+    # over the corresponding input region.
     for b in range(batch_size):
         for c in range(nchannels):
             for i in range(out_height):
@@ -185,11 +179,8 @@ def softmax(input: Tensor, dim: int) -> Tensor:
 
     """
     exp_x = Exp.apply(input)
-
     sum_exp = exp_x.sum(dim)
-
     sum_exp = sum_exp.view(*[1 if i == dim else s for i, s in enumerate(input.shape)])
-
     return exp_x / sum_exp
 
 
@@ -210,11 +201,8 @@ def logsoftmax(input: Tensor, dim: int) -> Tensor:
 
     """
     exp_x = Exp.apply(input)
-
     sum_exp = exp_x.sum(dim)
-
     sum_exp = sum_exp.view(*[1 if i == dim else s for i, s in enumerate(input.shape)])
-
     return input - Log.apply(sum_exp)
 
 
@@ -237,11 +225,8 @@ def dropout(input: Tensor, rate: float, ignore: bool = False) -> Tensor:
     """
     if ignore:
         return input
-
     if rate >= 1.0:
         return input * 0.0
-
     mask = rand(input.shape) > rate
-
     scale = 1.0 / (1.0 - rate)
     return mask * input * scale

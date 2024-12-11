@@ -271,6 +271,9 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # TODO: Implement for Task 4.2.
+    # Compute the dot product of the input element
+    # and the corresponding element in the weight tensor
+    # using the "sliding window" pattern.
     for b in prange(batch):
         for oc in range(out_channels):
             for h in range(height):
@@ -288,13 +291,11 @@ def _tensor_conv2d(
                                 )
                                 if w_pos < 0 or w_pos >= width:
                                     continue
-
                                 in_idx = b * s10 + ic * s11 + h_pos * s12 + w_pos * s13
 
                                 w_idx = (
                                     oc * s20 + ic * s21 + kh_idx * s22 + kw_idx * s23
                                 )
-
                                 if (
                                     in_idx >= 0
                                     and in_idx < len(input)
@@ -302,7 +303,6 @@ def _tensor_conv2d(
                                     and w_idx < len(weight)
                                 ):
                                     acc += input[in_idx] * weight[w_idx]
-
                     out_idx = (
                         b * out_strides[0]
                         + oc * out_strides[1]
