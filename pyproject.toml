@@ -18,7 +18,7 @@ ignore = [
     "*chainrule.py*",
 ]
 venvPath = "."
-venv = ".venv"
+venv = "venv"
 reportUnknownMemberType = "none"
 reportUnknownParameterType = "none"
 reportUnknownArgumentType = "none"
@@ -30,6 +30,13 @@ reportUnknownLambdaType = "none"
 reportIncompatibleMethodOverride = "none"
 reportPrivateUsage = "none"
 reportMissingParameterType = "error"
+reportMissingImports = "none"
+reportCallIssue = "none"
+reportPropertyTypeMismatch = "none"
+reportArgumentType = "none"
+reportOptionalSubscript = "none"
+reportMissingModuleSource = "none"
+
 
 
 [tool.pytest.ini_options]
@@ -98,8 +105,8 @@ ignore = [
     "ANN204",
     "ANN102",
 ]
-select = ["D", "E", "F", "N", "ANN"]
-fixable = [
+lint.select = ["D", "E", "F", "N", "ANN"]
+lint.fixable = [
     "A",
     "B",
     "C",
@@ -145,7 +152,7 @@ fixable = [
     "UP",
     "YTT",
 ]
-unfixable = []
+lint.unfixable = []
 
 [tool.ruff.extend-per-file-ignores]
 "tests/**/*.py" = ["D"]

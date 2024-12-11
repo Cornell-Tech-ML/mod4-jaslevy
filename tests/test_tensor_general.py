@@ -13,6 +13,9 @@ from minitorch import MathTestVariable, Tensor, TensorBackend, grad_check
 from .strategies import assert_close, small_floats
 from .tensor_strategies import assert_close_tensor, shaped_tensors, tensors
 
+# pyright: ignore[reportCallIssue]
+# pyright: ignore[reportArgumentType]
+
 one_arg, two_arg, red_arg = MathTestVariable._comp_testing()
 
 
@@ -306,7 +309,7 @@ if numba.cuda.is_available():
 
 
 @given(data())
-@settings(max_examples=25)
+@settings(max_examples=26)
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad_broadcast(

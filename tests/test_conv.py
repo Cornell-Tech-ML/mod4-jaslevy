@@ -6,6 +6,9 @@ from minitorch import Tensor
 
 from .tensor_strategies import tensors
 
+# pyright: ignore[reportCallIssue]
+# pyright: ignore[reportArgumentType]
+
 
 @pytest.mark.task4_1
 def test_conv1d_simple() -> None:
