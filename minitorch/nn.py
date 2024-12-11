@@ -78,25 +78,6 @@ def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     return pooled
 
 
-def argmax(input: Tensor, dim: int) -> Tensor:
-    """Compute the argmax as a 1-hot tensor.
-
-
-    Args:
-    ----
-        input: input tensor
-        dim: dimension to reduce
-
-
-    Returns:
-    -------
-        Tensor: 1-hot tensor with argmax values
-
-
-    """
-    return input.f.max_reduce(input, dim)
-
-
 class Max(Function):
     @staticmethod
     def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
