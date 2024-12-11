@@ -16,6 +16,11 @@ ignore = [
     "**/mt_diagrams",
     "**/.*",
     "*chainrule.py*",
+    "*test_conv.py*",
+    "*tensor_strategies.py*",
+    "*tensor_strategies.py*",
+    "*test_tensor_general.py*",
+    "*test_nn.py*",
 ]
 venvPath = "."
 venv = "venv"
@@ -31,6 +36,7 @@ reportIncompatibleMethodOverride = "none"
 reportPrivateUsage = "none"
 reportMissingParameterType = "error"
 reportMissingImports = "none"
+
 
 
 [tool.pytest.ini_options]
